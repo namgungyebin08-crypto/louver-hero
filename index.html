@@ -183,7 +183,7 @@
     font-family:var(--font-display); font-size:15px; color:var(--text-lo); margin-bottom:6px; text-align:center;
   }
 
-  /* ---------- host play board (서울 온도계 + 실시간 순위) ---------- */
+  /* ---------- host play board (서울 식히기 대결 게이지) ---------- */
   .play-stage{
     width:100%;
     max-width:800px;
@@ -195,58 +195,71 @@
     font-family:var(--font-display);
     font-size:56px;
     font-weight:800;
-    color:var(--heat-1);
-    text-shadow:0 0 20px rgba(0,217,255,0.4);
+    color:var(--heat-3);
+    text-shadow:0 0 20px rgba(255,214,10,0.4);
     margin-bottom:12px;
   }
-  .temp-display{
-    font-family:var(--font-display);
-    font-size:42px;
-    font-weight:700;
-    margin-bottom:20px;
-    transition:color 0.3s;
-  }
   
-  /* 도시 온도 게이지 */
-  .city-container{
+  /* 힘겨루기 도시 배틀 그라운드 */
+  .battle-ground{
     width:100%;
-    background:rgba(255,255,255,0.03);
+    background:var(--bg-panel);
     border:2px solid var(--line);
     border-radius:24px;
-    padding:24px;
+    padding:30px 24px;
     position:relative;
     overflow:hidden;
     margin-bottom:28px;
     text-align:center;
   }
-  .city-bg-effect{
-    position:absolute; inset:0;
-    background:linear-gradient(0deg, rgba(255,48,64,0.1) 0%, transparent 80%);
-    transition:opacity 0.5s;
-    z-index:1;
+  .battle-meta{
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 12px;
   }
-  .city-emoji{
-    font-size:64px;
-    position:relative;
-    z-index:2;
-    margin-bottom:10px;
+  .cool-score{ color: var(--heat-1); }
+  .hot-score{ color: var(--heat-6); }
+
+  .city-center{
+    font-size: 80px;
+    margin: 15px 0;
+    transition: transform 0.2s ease;
+    display: inline-block;
   }
-  .progress-track {
-    background: var(--bg-void);
+
+  /* 쿨팀 vs 핫팀 실시간 대결 게이지 바 */
+  .vs-bar-track {
+    background: var(--heat-6); /* 기본 핫팀 색상 */
     border-radius: 999px;
-    height: 30px;
+    height: 36px;
     width: 100%;
     position: relative;
-    z-index: 2;
     overflow: hidden;
-    border: 1px solid var(--line);
-    margin-bottom: 10px;
+    border: 2px solid var(--line);
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
   }
-  .progress-fill {
+  .vs-bar-fill {
     height: 100%;
-    width: 50%;
-    background: linear-gradient(90deg, var(--heat-1), var(--heat-3), var(--heat-6));
-    transition: width 0.15s ease-out;
+    width: 50%; /* 실시간 쿨팀 비율에 따라 연동 */
+    background: var(--heat-1); /* 쿨팀 색상 */
+    transition: width 0.2s ease-out;
+    border-right: 4px solid var(--text-hi);
+  }
+  .vs-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 16px;
+    color: var(--text-hi);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    pointer-events: none;
+    z-index: 5;
   }
 
   /* 실시간 개인 순위표 */
@@ -254,7 +267,7 @@
     font-family: var(--font-display);
     font-size: 22px;
     font-weight: 700;
-    margin: 15px 0 10px;
+    margin: 10px 0 10px;
     color: var(--text-hi);
     text-align: left;
     width: 100%;
@@ -274,7 +287,7 @@
     background: var(--bg-panel-2);
     border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 10px 18px;
+    padding: 11px 18px;
     position: relative;
     overflow: hidden;
   }
@@ -394,13 +407,13 @@
   <!-- 화면 1: 역할 선택 -->
   <div id="screen-role" class="screen">
     <span class="eyebrow">Realtime Tap Battle</span>
-    <h1 class="title">서울 식히기 : 개인전</h1>
-    <p class="sub">30초 동안 미친 듯이 탭하세요! 쿨팀❄️과 핫팀🔥 중 서울의 온도를 결정할 탭 마스터 1,2,3,4등을 선발합니다!</p>
+    <h1 class="title">서울 식히기 : 대결</h1>
+    <p class="sub">30초 동안 미친 듯이 탭하세요! 쿨팀❄️과 핫팀🔥이 맞붙어 서울의 운명을 결정합니다! (개인 순위 1~4등 시상)</p>
     <div class="role-grid">
       <div class="role-card host" onclick="selectRole('host')">
         <span class="emoji">🖥️</span>
         <h3>호스트로 참여 (화면 공유용)</h3>
-        <p>프로젝터나 화면 공유를 통해 모두에게 실시간 서울 온도와 개인 순위를 띄워줍니다.</p>
+        <p>프로젝터나 화면 공유를 통해 모두에게 실시간 양팀 대결 상황과 개인 순위를 띄워줍니다.</p>
       </div>
       <div class="role-card player" onclick="selectRole('player')">
         <span class="emoji">📱</span>
@@ -442,23 +455,28 @@
     <button class="btn btn-hot" style="max-width: 300px; margin-top: 20px;" onclick="startGame()">게임 시작!</button>
   </div>
 
-  <!-- 화면 4: 호스트 게임판 (중계용 실시간 전체 리더보드 + 서울 온도) -->
+  <!-- 화면 4: 호스트 게임판 (중계용 실시간 전체 리더보드 + 양팀 대결 바) -->
   <div id="screen-host-play" class="screen hidden">
     <div class="play-stage">
       <div class="timer-banner" id="game-timer">30</div>
-      <div class="temp-display" id="city-temp">현재 온도: 30.0°C</div>
 
-      <!-- 서울 온도 가속 비주얼 영역 -->
-      <div class="city-container">
-        <div class="city-bg-effect" id="bg-effect"></div>
-        <div class="city-emoji" id="city-emoji">🏙️</div>
-        
-        <div class="progress-track">
-          <div class="progress-fill" id="temp-progress"></div>
+      <!-- 서울 쿨 vs 핫 대결 그라운드 (가운데 도시 아이콘 + 대결 바) -->
+      <div class="battle-ground">
+        <div class="battle-meta">
+          <span class="cool-score">❄️ 쿨팀 총 탭: <span id="cool-tap-count">0</span></span>
+          <span class="hot-score">🔥 핫팀 총 탭: <span id="hot-tap-count">0</span></span>
+        </div>
+
+        <div class="city-center" id="city-emoji">🏙️</div>
+
+        <!-- 양팀의 점수 비율을 대변하는 대결 게이지 바 -->
+        <div class="vs-bar-track">
+          <div class="vs-bar-fill" id="vs-progress"></div>
+          <div class="vs-indicator">VS</div>
         </div>
       </div>
 
-      <div class="leaderboard-title">🏆 실시간 개인 순위 (전체 참가자)</div>
+      <div class="leaderboard-title">🏆 실시간 개인 순위 (전체)</div>
       <!-- 실시간 랭킹 리더보드 -->
       <div class="leaderboard-container" id="realtime-leaderboard">
         <!-- 동적으로 전체 참가자 랭킹 렌더링 -->
@@ -582,8 +600,7 @@
     roomRef.set({
       status: 'waiting',
       coolTaps: 0,
-      hotTaps: 0,
-      temp: 30.0
+      hotTaps: 0
     });
 
     // 플레이어 접속 실시간 리스너
@@ -689,47 +706,46 @@
     roomRef.update({
       status: 'playing',
       coolTaps: 0,
-      hotTaps: 0,
-      temp: 30.0
+      hotTaps: 0
     });
 
     showScreen('host-play');
     isGameActive = true;
 
-    // 실시간 서울 온도 연산 + 개인 랭킹 리스너 통합
+    // 양팀 점수 대결 바 & 개인 랭킹 리스너 통합
     roomRef.on('value', (snap) => {
       const data = snap.val();
       if (!data) return;
 
-      // 1. 서울의 실시간 온도 공식 연산
+      // 1. 실시간 대결 게이지 계산
       const cTaps = data.coolTaps || 0;
       const hTaps = data.hotTaps || 0;
-      const calculatedTemp = Math.round((30.0 - (cTaps * 0.1) + (hTaps * 0.1)) * 10) / 10;
-      
-      const tempDisplay = document.getElementById('city-temp');
-      tempDisplay.innerText = `현재 온도: ${calculatedTemp.toFixed(1)}°C`;
+      const totalTaps = cTaps + hTaps;
 
-      // 게이지 폭 조정 (최소 0도, 최대 60도 범위)
-      let percentage = (calculatedTemp / 60) * 100;
-      if (percentage < 0) percentage = 0;
-      if (percentage > 100) percentage = 100;
-      document.getElementById('temp-progress').style.width = percentage + '%';
+      document.getElementById('cool-tap-count').innerText = cTaps;
+      document.getElementById('hot-tap-count').innerText = hTaps;
 
-      // 온도 가시화 환경 처리
+      // 쿨팀 대 핫팀 점수 비례 계산 (최소 5% 보정으로 게이지 극단 찌그러짐 방지)
+      let coolRatio = 50; 
+      if (totalTaps > 0) {
+        coolRatio = (cTaps / totalTaps) * 100;
+        if (coolRatio < 5) coolRatio = 5;
+        if (coolRatio > 95) coolRatio = 95;
+      }
+
+      document.getElementById('vs-progress').style.width = coolRatio + '%';
+
+      // 승세에 따른 가운데 서울 상태(이모지) 및 모션 변화
       const emojiEl = document.getElementById('city-emoji');
-      const bgEffect = document.getElementById('bg-effect');
-      if (calculatedTemp <= 15) {
-        emojiEl.innerText = "❄️🏙️☃️";
-        tempDisplay.style.color = 'var(--heat-1)';
-        bgEffect.style.background = 'linear-gradient(0deg, rgba(0,217,255,0.2) 0%, transparent 80%)';
-      } else if (calculatedTemp > 15 && calculatedTemp <= 35) {
-        emojiEl.innerText = "🏙️🍃🚗";
-        tempDisplay.style.color = 'var(--heat-3)';
-        bgEffect.style.background = 'linear-gradient(0deg, rgba(255,214,10,0.1) 0%, transparent 80%)';
+      if (coolRatio > 55) {
+        emojiEl.innerText = "❄️🏙️❄️"; // 쿨팀 우세
+        emojiEl.style.transform = `scale(${1 + (coolRatio - 50) * 0.01})`;
+      } else if (coolRatio < 45) {
+        emojiEl.innerText = "🔥🏙️🔥"; // 핫팀 우세
+        emojiEl.style.transform = `scale(${1 + (50 - coolRatio) * 0.01})`;
       } else {
-        emojiEl.innerText = "🥵🏙️🔥";
-        tempDisplay.style.color = 'var(--heat-6)';
-        bgEffect.style.background = 'linear-gradient(0deg, rgba(255,48,64,0.3) 0%, transparent 80%)';
+        emojiEl.innerText = "⚖️🏙️⚖️"; // 팽팽함
+        emojiEl.style.transform = "scale(1.0)";
       }
 
       // 2. 실시간 개인 순위표 구성
@@ -862,29 +878,28 @@
       const data = snap.val();
       const cTaps = data.coolTaps || 0;
       const hTaps = data.hotTaps || 0;
-      const finalTemp = Math.round((30.0 - (cTaps * 0.1) + (hTaps * 0.1)) * 10) / 10;
 
       showScreen('host-result');
 
       const verdictTitle = document.getElementById('final-verdict');
       const verdictSub = document.getElementById('final-verdict-sub');
 
-      // 최종 서울 환경 판정 멘트
-      if (finalTemp < 30.0) {
-        verdictTitle.innerText = "❄️ 서울을 식혔습니다!";
+      // 최종 대결 게이지 정산 결과 
+      if (cTaps > hTaps) {
+        verdictTitle.innerText = "❄️ 쿨팀이 서울을 구했습니다!";
         verdictTitle.style.color = "var(--heat-1)";
-        verdictSub.innerHTML = `최종 온도: <strong>${finalTemp}°C</strong><br>쿨팀의 엄청난 연타 기여로 도심 열섬 현상을 멋지게 저지했습니다!`;
-      } else if (finalTemp > 30.0) {
-        verdictTitle.innerText = "🔥 서울이 불타고 있습니다!";
+        verdictSub.innerHTML = `총 스코어 - 쿨팀: <strong>${cTaps}</strong> vs 핫팀: <strong>${hTaps}</strong><br>쿨팀의 승리로 도심 온도 상승을 저지하고 서울을 쾌적하게 식히는 데 성공했습니다!`;
+      } else if (hTaps > cTaps) {
+        verdictTitle.innerText = "🔥 핫팀이 서울을 불태웠습니다!";
         verdictTitle.style.color = "var(--heat-6)";
-        verdictSub.innerHTML = `최종 온도: <strong>${finalTemp}°C</strong><br>핫팀의 폭발적인 연타 화력으로 서울의 대기가 펄펄 끓습니다!`;
+        verdictSub.innerHTML = `총 스코어 - 쿨팀: <strong>${cTaps}</strong> vs 핫팀: <strong>${hTaps}</strong><br>핫팀의 압도적인 연타 화력에 의해 서울 대기가 뜨거운 열섬 현상에 휩싸였습니다!`;
       } else {
-        verdictTitle.innerText = "⚖️ 서울의 온도가 유지되었습니다!";
+        verdictTitle.innerText = "⚖️ 승부가 나지 않았습니다! 무승부!";
         verdictTitle.style.color = "var(--heat-3)";
-        verdictSub.innerHTML = `최종 온도: <strong>30.0°C</strong><br>시원함과 뜨거움이 자웅을 겨루어 최적의 평형 상태를 유지했습니다!`;
+        verdictSub.innerHTML = `총 스코어 - 쿨팀: <strong>${cTaps}</strong> vs 핫팀: <strong>${hTaps}</strong><br>양 팀의 세력이 완벽히 균형을 이루어 온도가 그대로 유지되었습니다!`;
       }
 
-      // 최종 순위 정렬
+      // 최종 개인 순위 정렬 (기존 기능 그대로 시상대 1~4등 노출)
       const players = data.players || {};
       const sorted = Object.keys(players).map(key => ({
         name: players[key].name,
