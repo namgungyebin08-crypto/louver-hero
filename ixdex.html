@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>서울 식히기: 루버 제트 탭 배틀</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#070b14;
+    --bg-panel:#0e1626;
+    --bg-panel-2:#131f36;
+    --line:#1f2f4d;
+    --heat-1:#00d9ff; /* 차가움 */
+    --heat-3:#ffd60a;
+    --heat-5:#ff7b00;
+    --heat-6:#ff3040; /* 뜨거움 */
+    --ok:#2dd4bf;
+    --bad:#ff3040;
+    --text-hi:#f3f6ff;
+    --text-lo:#8a9bc0;
+    --font-display:'Rajdhani', sans-serif;
+    --font-body:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select: none;}
+  html,body{height:100%; margin:0;}
+  body{
+    background:
+      radial-gradient(ellipse 1200px 800px at 15% -10%, rgba(67,97,238,0.25), transparent 60%),
+      radial-gradient(ellipse 1000px 700px at 110% 10%, rgba(255,48,64,0.18), transparent 55%),
+      var(--bg-void);
+    color:var(--text-hi);
+    font-family:var(--font-body);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .screen{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:28px 20px;
+    position:relative;
+  }
+  .hidden{display:none !important;}
+
+  /* ---------- shared bits ---------- */
+  .eyebrow{
+    font-family:var(--font-display);
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    font-size:13px;
+    color:var(--heat-1);
+    font-weight:600;
+    margin-bottom:10px;
+  }
+  h1.title{
+    font-family:var(--font-display);
+    font-size:44px;
+    font-weight:700;
+    line-height:1.05;
+    margin:0 0 6px;
+    background:linear-gradient(90deg, var(--heat-1), var(--heat-5) 55%, var(--heat-6));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    text-align:center;
+  }
+  p.sub{
+    color:var(--text-lo);
+    font-size:15px;
+    text-align:center;
+    max-width:420px;
+    margin:0 0 32px;
+    line-height:1.6;
+  }
+  .card{
+    background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:24px;
+    width:100%;
+    max-width:440px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.4);
+  }
+  .btn{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:19px;
+    letter-spacing:0.02em;
+    border:none;
+    border-radius:14px;
+    padding:16px 20px;
+    cursor:pointer;
+    width:100%;
+    transition:transform .12s ease, filter .12s ease;
+    color:var(--bg-void);
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn:disabled{opacity:0.35; cursor:not-allowed;}
+  .btn-hot{background:linear-gradient(90deg, var(--heat-5), var(--heat-6)); color:#fff;}
+  .btn-cool{background:linear-gradient(90deg, var(--heat-1), #00a2ff); color:#031018;}
+  .btn-ghost{
+    background:transparent; border:1.5px solid var(--line); color:var(--text-hi);
+  }
+  .stack{display:flex; flex-direction:column; gap:14px; width:100%;}
+  input[type=text]{
+    font-family:var(--font-body);
+    font-size:18px;
+    padding:15px 16px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    background:var(--bg-void);
+    color:var(--text-hi);
+    width:100%;
+    outline:none;
+    text-align:center;
+  }
+  input:focus{border-color:var(--heat-1);}
+  .err-msg{color:var(--heat-6); font-size:13px; text-align:center; min-height:18px;}
+
+  /* ---------- role select ---------- */
+  .role-grid{display:flex; flex-direction:column; gap:16px; width:100%; max-width:400px;}
+  .role-card{
+    background:var(--bg-panel); border:1.5px solid var(--line); border-radius:18px;
+    padding:24px; text-align:left; cursor:pointer; transition:border-color .15s, transform .15s;
+  }
+  .role-card:active{transform:scale(0.98);}
+  .role-card .emoji{font-size:34px; margin-bottom:8px; display:block;}
+  .role-card h3{font-family:var(--font-display); font-size:21px; margin:0 0 4px;}
+  .role-card p{color:var(--text-lo); font-size:13.5px; margin:0; line-height:1.5;}
+  .role-card.host{border-color:rgba(255,123,0,0.35);}
+  .role-card.player{border-color:rgba(0,217,255,0.35);}
+
+  /* ---------- host lobby ---------- */
+  .room-code{
+    font-family:var(--font-display);
+    font-size:64px;
+    font-weight:700;
+    letter-spacing:0.12em;
+    color:var(--heat-3);
+    text-align:center;
+    margin:6px 0 2px;
+    text-shadow:0 0 30px rgba(255,214,10,0.35);
+  }
+  .info-box{
+    background:rgba(255,255,255,0.03);
+    border:1.5px dashed var(--line);
+    border-radius:16px;
+    padding:20px;
+    width:100%;
+    max-width:440px;
+    text-align:center;
+    margin-bottom:20px;
+  }
+  .info-box span{
+    display:block;
+    font-family:var(--font-display);
+    font-size:20px;
+    color:var(--heat-1);
+    font-weight:700;
+    word-break: break-all;
+    user-select: text;
+    margin-top:6px;
+  }
+  .players-grid{
+    display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:16px 0; max-width:700px;
+  }
+  .player-chip{
+    background:var(--bg-panel-2); border:1px solid var(--line); border-radius:999px;
+    padding:8px 14px; font-size:13.5px; font-weight:600; color:var(--text-hi);
+    display:flex; align-items:center; gap:6px;
+  }
+  .player-chip .dot{width:8px; height:8px; border-radius:50%; background:var(--ok);}
+  .count-pill{
+    font-family:var(--font-display); font-size:15px; color:var(--text-lo); margin-bottom:6px; text-align:center;
+  }
+
+  /* ---------- host play board ---------- */
+  .play-stage{
+    width:100%;
+    max-width:800px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .timer-banner{
+    font-family:var(--font-display);
+    font-size:56px;
+    font-weight:800;
+    color:var(--heat-1);
+    text-shadow:0 0 20px rgba(0,217,255,0.4);
+    margin-bottom:12px;
+  }
+  .temp-display{
+    font-family:var(--font-display);
+    font-size:42px;
+    font-weight:700;
+    margin-bottom:20px;
+    transition:color 0.3s;
+  }
+  /* 도시 온도 게이지 */
+  .city-container{
+    width:100%;
+    background:rgba(255,255,255,0.03);
+    border:2px solid var(--line);
+    border-radius:24px;
+    padding:24px;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:28px;
+    text-align:center;
+  }
+  .city-bg-effect{
+    position:absolute; inset:0;
+    background:linear-gradient(0deg, rgba(255,48,64,0.1) 0%, transparent 80%);
+    transition:opacity 0.5s;
+    z-index:1;
+  }
+  .city-emoji{
+    font-size:64px;
+    position:relative;
+    z-index:2;
+    display:inline-block;
+    transition:transform 0.1s;
+  }
+  .wind-particle {
+    position: absolute;
+    width: 6px;
+    height: 30px;
+    background: rgba(0,217,255,0.6);
+    border-radius: 99px;
+    pointer-events: none;
+    z-index: 1;
+    animation: flowDown 0.8s linear forwards;
+  }
+  @keyframes flowDown {
+    0% { transform: translateY(-100px) scaleY(1); opacity: 1; }
+    100% { transform: translateY(200px) scaleY(1.5); opacity: 0; }
+  }
+
+  /* 실시간 탑3 랭킹 */
+  .rank-podium{
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    gap:16px;
+    width:100%;
+    margin-top:10px;
+    height:200px;
+  }
+  .podium-col{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+    max-width:140px;
+  }
+  .podium-bar{
+    width:100%;
+    background:var(--bg-panel-2);
+    border:2px solid var(--line);
+    border-bottom:none;
+    border-top-left-radius:12px;
+    border-top-right-radius:12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:10px;
+    font-family:var(--font-display);
+    transition:height 0.3s ease;
+  }
+  .podium-col.first .podium-bar{ background:rgba(255,214,10,0.15); border-color:var(--heat-3); height:140px; }
+  .podium-col.second .podium-bar{ background:rgba(201,212,232,0.15); border-color:#c9d4e8; height:100px; }
+  .podium-col.third .podium-bar{ background:rgba(224,164,90,0.15); border-color:#e0a45a; height:70px; }
+  .podium-name{
+    font-weight:700; font-size:15px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;
+  }
+  .podium-score{
+    font-size:18px; font-weight:700; color:var(--heat-1); margin-top:4px;
+  }
+
+  /* ---------- leaderboard ---------- */
+  .lb-row{
+    display:flex; align-items:center; gap:14px; background:var(--bg-panel); border:1px solid var(--line);
+    border-radius:14px; padding:13px 18px; margin-bottom:9px; width:100%;
+  }
+  .lb-rank{font-family:var(--font-display); font-size:20px; font-weight:700; width:32px; color:var(--text-lo);}
+  .lb-row.top1 .lb-rank{color:var(--heat-3);}
+  .lb-row.top2 .lb-rank{color:#c9d4e8;}
+  .lb-row.top3 .lb-rank{color:#e0a45a;}
+  .lb-name{flex:1; font-weight:700; font-size:16px;}
+  .lb-score{font-family:var(--font-display); font-weight:700; font-size:18px; color:var(--heat-1);}
+
+  /* ---------- player tapping ---------- */
+  .tap-container{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+    max-width:420px;
+  }
+  .tap-btn{
+    width:220px;
+    height:220px;
+    border-radius:50%;
+    background:radial-gradient(circle, #00d9ff 0%, #0077ff 100%);
+    border:8px solid rgba(255,255,255,0.15);
+    box-shadow:0 0 50px rgba(0,217,255,0.4), inset 0 4px 10px rgba(255,255,255,0.5);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-family:var(--font-display);
+    color:#fff;
+    font-weight:800;
+    font-size:26px;
+    text-shadow:0 2px 4px rgba(0,0,0,0.4);
+    transition:transform 0.05s, filter 0.05s;
+    margin:28px 0;
+    touch-action:manipulation;
+  }
+  .tap-btn:active{
+    transform:scale(0.92);
+    filter:brightness(1.2);
+    box-shadow:0 0 70px rgba(0,217,255,0.7);
+  }
+  .tap-btn .tap-sub{
+    font-size:12px; font-family:var(--font-body); font-weight:500; opacity:0.8; margin-top:4px; letter-spacing:0.05em;
+  }
+  .tap-score-display{
+    font-family:var(--font-display);
+    font-size:48px;
+    font-weight:700;
+    color:var(--heat-3);
+    text-shadow:0 0 20px rgba(255,214,10,0.3);
+  }
+
+  .footer-note{color:var(--text-lo); font-size:12px; text-align:center; margin-top:26px; max-width:380px;}
+</style>
+</head>
+<body>
+
+<!-- ============ ROLE SELECT ============ -->
+<div id="screen-role" class="screen">
+  <div class="eyebrow">🔥 실시간 열섬 정화 탭 배틀</div>
+  <h1 class="title">서울 식히기!<br>루버 제트 대작전</h1>
+  <p class="sub">서울이 폭염으로 불타고 있습니다! 모바일 기기로 들어가 화면을 연타해 스마트 루버 바람을 쏘아주세요.</p>
+  <div class="role-grid">
+    <div class="role-card host" onclick="goHostSetup()">
+      <span class="emoji">🖥️</span>
+      <h3>진행자로 시작</h3>
+      <p>교실 화면(TV/빔프로젝터)에 띄우는 메인 스크린입니다. 참여 주소와 방 코드가 제공됩니다.</p>
+    </div>
+    <div class="role-card player" onclick="goJoin()">
+      <span class="emoji">📱</span>
+      <h3>참가자로 입장</h3>
+      <p>개인 스마트폰으로 접속하여 제트 탭 버튼을 눌러 서울을 식히는 역할입니다.</p>
+    </div>
+  </div>
+  <p class="footer-note">참가자는 최대 22명까지 동시 참여하여 1, 2, 3등 경쟁을 펼칩니다!</p>
+</div>
+
+<!-- ============ HOST: LOBBY ============ -->
+<div id="screen-host-lobby" class="screen hidden">
+  <div class="eyebrow">진행자 화면 · 참가자에게 아래 정보를 보여주세요</div>
+  <h1 class="title" style="font-size:30px;">모바일 기기 접속 방법</h1>
+  
+  <div class="info-box">
+    <div class="eyebrow" style="color:var(--heat-3); margin-bottom: 2px;">1️⃣ 스마트폰 브라우저에 아래 주소 입력하기</div>
+    <span id="host-url-address">https://claude.site</span>
+    <div class="eyebrow" style="color:var(--heat-3); margin-top:16px; margin-bottom: 2px;">2️⃣ 아래 방 코드 4자리 입력하기</div>
+    <div class="room-code" id="host-room-code">----</div>
+  </div>
+
+  <p class="sub" style="margin-bottom:8px;">💡 스마트폰 인터넷 창에 위 주소를 치고 들어간 뒤 <b>방 코드</b>를 쓰면 접속됩니다!</p>
+  
+  <div class="card" style="margin-top:10px;">
+    <div class="count-pill" id="join-count">참가자 0명 대기 중<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span></div>
+    <div class="players-grid" id="host-players-grid"></div>
+    <button class="btn btn-hot" id="host-start-btn" onclick="hostStartGame()" disabled style="margin-top:10px;">참가자를 기다리는 중</button>
+  </div>
+</div>
+
+<!-- ============ HOST: PLAYING ============ -->
+<div id="screen-host-play" class="screen hidden">
+  <div class="play-stage">
+    <div class="eyebrow">🌡️ 실시간 기온 상승 중! 빨리 식혀야 합니다!</div>
+    <div class="timer-banner" id="host-timer">30.0</div>
+    
+    <div class="city-container" id="city-box">
+      <div class="city-bg-effect" id="city-effect"></div>
+      <div class="city-emoji" id="city-icon">🔥</div>
+      <div class="temp-display" id="host-temp">39.5℃</div>
+    </div>
+
+    <!-- 실시간 Top 3 포디움 -->
+    <div class="eyebrow" style="color:var(--heat-3)">🏆 실시간 연타 TOP 3</div>
+    <div class="rank-podium">
+      <div class="podium-col second">
+        <span style="font-size:24px;">🥈</span>
+        <div class="podium-bar">
+          <div class="podium-name" id="p2-name">-</div>
+          <div class="podium-score" id="p2-score">0</div>
+        </div>
+      </div>
+      <div class="podium-col first">
+        <span style="font-size:32px;">🥇</span>
+        <div class="podium-bar">
+          <div class="podium-name" id="p1-name">-</div>
+          <div class="podium-score" id="p1-score">0</div>
+        </div>
+      </div>
+      <div class="podium-col third">
+        <span style="font-size:20px;">🥉</span>
+        <div class="podium-bar">
+          <div class="podium-name" id="p3-name">-</div>
+          <div class="podium-score" id="p3-score">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HOST: END ============ -->
+<div id="screen-host-end" class="screen hidden">
+  <div class="podium-title" id="host-end-emoji">🏆</div>
+  <h1 class="title" style="font-size:32px;" id="host-end-title">서울을 지켜냈습니다!</h1>
+  <p class="sub" id="host-end-temp-sub">최종 온도: 24.5℃</p>
+  <div class="card" id="host-final-lb" style="margin-top:10px;"></div>
+  <p class="footer-note">새 게임을 시작하려면 새로고침하세요.</p>
+</div>
+
+<!-- ============ PLAYER: JOIN ============ -->
+<div id="screen-join" class="screen hidden">
+  <div class="eyebrow">📱 대작전 참여</div>
+  <h1 class="title" style="font-size:30px;">방에 들어가기</h1>
+  <div class="card">
+    <div class="stack">
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px;">방 코드</div>
+        <input type="text" id="join-code" placeholder="진행자 화면의 4자리" maxlength="4" inputmode="numeric">
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px;">닉네임</div>
+        <input type="text" id="join-name" placeholder="닉네임 (최대 8자)" maxlength="8">
+      </div>
+      <div class="err-msg" id="join-err"></div>
+      <button class="btn btn-cool" onclick="playerJoin()">대작전 참가</button>
+      <button class="btn btn-ghost" onclick="goRole()">← 뒤로</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PLAYER: WAITING ============ -->
+<div id="screen-p-waiting" class="screen hidden">
+  <div style="font-size:56px; margin-bottom:14px;">🏙️💨</div>
+  <h1 class="title" style="font-size:26px;" id="pw-hello">장전 완료!</h1>
+  <p class="sub">진행자가 게임을 시작하면 폰 화면을 연타할 준비를 하세요!<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span></p>
+</div>
+
+<!-- ============ PLAYER: PLAYING ============ -->
+<div id="screen-p-play" class="screen hidden">
+  <div class="tap-container">
+    <div class="eyebrow">마구 두드려 루버 바람 발사!!</div>
+    <div class="tap-score-display" id="player-score">0</div>
+    <div class="tap-btn" id="louver-tap-btn" onclick="handleTap()">
+      <span>💨</span>
+      <span>COOL!</span>
+      <span class="tap-sub">TAP HERE</span>
+    </div>
+    <p class="sub" style="font-size:14px; color:var(--text-lo);">탭할 때마다 차가운 스마트 루버 제트 바람이 전송됩니다!</p>
+  </div>
+</div>
+
+<!-- ============ PLAYER: END ============ -->
+<div id="screen-p-end" class="screen hidden">
+  <div class="podium-title" id="pe-emoji">🎉</div>
+  <h1 class="title" style="font-size:28px;" id="pe-title">게임 종료!</h1>
+  <div class="card">
+    <div style="text-align:center;">
+      <div style="font-family:var(--font-display); font-size:15px; color:var(--text-lo);">내 최종 순위</div>
+      <div class="score-pop" id="pe-rank" style="font-size:48px; font-weight:800; color:var(--heat-1); margin:14px 0;">-</div>
+      <div style="font-family:var(--font-display); font-size:15px; color:var(--text-lo);">총 바람 발사 수</div>
+      <div class="score-pop" id="pe-score" style="font-size:30px; font-weight:700;">0</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   루버 히어로 — 실시간 탭 배틀 (열섬 현상 제어)
+   ============================================================ */
+
+let ROLE = null;
+let ROOM = null;
+let PID = null;
+let MY_NAME = null;
+let pollTimer = null;
+let gameTimer = null;
+let localScore = 0;
+
+const GAME_DURATION = 30; // 30초 경쟁
+const MAX_PLAYERS = 22;
+
+const _localMockStorage = {};
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+function genRoomCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
+
+/* ---------------- storage helpers ---------------- */
+async function sGet(key){
+  if (window.storage && typeof window.storage.get === 'function') {
+    try {
+      const r = await window.storage.get(key, { shared: true });
+      return r ? r.value : null;
+    } catch(e) {}
+  }
+  return localStorage.getItem(key) || _localMockStorage[key] || null;
+}
+
+async function sSet(key, value){
+  if (window.storage && typeof window.storage.set === 'function') {
+    try {
+      await window.storage.set(key, value, { shared: true });
+      return true;
+    } catch(e) {}
+  }
+  localStorage.setItem(key, value);
+  _localMockStorage[key] = value;
+  return true;
+}
+
+function kState(room){ return `tap_${room}_state`; }
+function kPlayers(room){ return `tap_${room}_players`; }
+
+async function readJSON(key, fallback){
+  const raw = await sGet(key);
+  if(!raw) return fallback;
+  try{ return JSON.parse(raw); } catch(e){ return fallback; }
+}
+async function writeJSON(key, obj){ return await sSet(key, JSON.stringify(obj)); }
+
+/* ---------------- ROLE SELECT ---------------- */
+function goRole(){ show('screen-role'); }
+function goJoin(){ show('screen-join'); }
+
+function goHostSetup(){
+  ROLE = 'host';
+  ROOM = genRoomCode();
+  document.getElementById('host-room-code').textContent = ROOM;
+  
+  // 현재 접속중인 브라우저의 진짜 링크 자동 감지해서 화면에 텍스트로 표출
+  let cleanUrl = window.location.href.split('?')[0].split('#')[0];
+  if(cleanUrl.includes('claude.usercontent.com')) {
+    cleanUrl = "우측 상단 '점 세개(⋮)' 클릭 -> '공유(Publish)' 완료 후 주소창 주소를 넣어주세요.";
+  }
+  document.getElementById('host-url-address').textContent = cleanUrl;
+
+  writeJSON(kState(ROOM), { phase:'lobby', endTs: 0 });
+  writeJSON(kPlayers(ROOM), {});
+  
+  show('screen-host-lobby');
+  pollTimer = setInterval(hostLobbyPoll, 1500);
+  hostLobbyPoll();
+}
+
+async function hostLobbyPoll(){
+  const players = await readJSON(kPlayers(ROOM), {});
+  const names = Object.values(players);
+  document.getElementById('join-count').innerHTML = `참가자 ${names.length}명 대기 중<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span>`;
+  const grid = document.getElementById('host-players-grid');
+  grid.innerHTML = names.map(p => `<div class="player-chip"><span class="dot"></span>${escapeHtml(p.name)}</div>`).join('');
+  const startBtn = document.getElementById('host-start-btn');
+  if(names.length > 0){ startBtn.disabled = false; startBtn.textContent = `대작전 시작! (${names.length}명)`; }
+  else { startBtn.disabled = true; startBtn.textContent = '참가자를 기다리는 중'; }
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------------- HOST: PLAYING ---------------- */
+let totalTapsLast = 0;
+
+async function hostStartGame(){
+  clearInterval(pollTimer);
+  const endTs = Date.now() + GAME_DURATION * 1000;
+  await writeJSON(kState(ROOM), { phase:'play', endTs });
+  show('screen-host-play');
+  
+  totalTapsLast = 0;
+  pollTimer = setInterval(hostPlayPoll, 500); // 0.5초마다 빠르게 싱크로
+  
+  // 기상 열섬 애니메이션 타이머
+  gameTimer = setInterval(() => {
+    const remain = Math.max(0, (endTs - Date.now()) / 1000);
+    document.getElementById('host-timer').textContent = remain.toFixed(1);
+    if(remain <= 0) {
+      clearInterval(gameTimer);
+      hostEndGame();
+    }
+  }, 100);
+}
+
+async function hostPlayPoll(){
+  const players = await readJSON(kPlayers(ROOM), {});
+  const pList = Object.values(players).sort((a,b)=>b.score-a.score);
+  
+  // 실시간 Top 3 포디움 업데이트
+  document.getElementById('p1-name').textContent = pList[0] ? pList[0].name : '-';
+  document.getElementById('p1-score').textContent = pList[0] ? pList[0].score : '0';
+  document.getElementById('p2-name').textContent = pList[1] ? pList[1].name : '-';
+  document.getElementById('p2-score').textContent = pList[1] ? pList[1].score : '0';
+  document.getElementById('p3-name').textContent = pList[2] ? pList[2].name : '-';
+  document.getElementById('p3-score').textContent = pList[2] ? pList[2].score : '0';
+
+  // 총 탭수 계산 후 온도 반영 (기본 온도 42도에서 탭이 많을수록 시원해짐)
+  const totalTaps = Object.values(players).reduce((sum, p) => sum + (p.score || 0), 0);
+  const baseTemp = 42.0;
+  const coolEffect = Math.min(18, totalTaps * 0.1); // 최대 18도까지 식힐 수 있음
+  const currentTemp = baseTemp - coolEffect;
+
+  const tempEl = document.getElementById('host-temp');
+  tempEl.textContent = `${currentTemp.toFixed(1)}℃`;
+
+  const cityIcon = document.getElementById('city-icon');
+  const cityEffect = document.getElementById('city-effect');
+
+  if(currentTemp > 35) {
+    cityIcon.textContent = '🔥🥵🏢';
+    tempEl.style.color = 'var(--heat-6)';
+    cityEffect.style.opacity = '1';
+  } else if(currentTemp > 28) {
+    cityIcon.textContent = '☀️🏢';
+    tempEl.style.color = 'var(--heat-5)';
+    cityEffect.style.opacity = '0.5';
+  } else {
+    cityIcon.textContent = '🍃😎🏢';
+    tempEl.style.color = 'var(--heat-1)';
+    cityEffect.style.opacity = '0';
+  }
+
+  // 탭 입력이 증가했으면 바람 입자 이펙트 추가
+  if (totalTaps > totalTapsLast) {
+    createWindParticles(totalTaps - totalTapsLast);
+    totalTapsLast = totalTaps;
+  }
+}
+
+function createWindParticles(count) {
+  const container = document.getElementById('city-box');
+  const spawnCount = Math.min(15, count); // 성능 최적화
+  for (let i = 0; i < spawnCount; i++) {
+    const p = document.createElement('div');
+    p.className = 'wind-particle';
+    p.style.left = Math.random() * 90 + 5 + '%';
+    p.style.animationDelay = Math.random() * 0.3 + 's';
+    container.appendChild(p);
+    setTimeout(() => p.remove(), 1200);
+  }
+}
+
+async function hostEndGame(){
+  clearInterval(pollTimer);
+  await writeJSON(kState(ROOM), { phase:'end', endTs: 0 });
+  
+  const players = await readJSON(kPlayers(ROOM), {});
+  const ranked = Object.values(players).sort((a,b)=>b.score-a.score);
+  
+  const totalTaps = ranked.reduce((sum, p) => sum + p.score, 0);
+  const finalTemp = Math.max(24.0, 42.0 - (totalTaps * 0.1));
+
+  const endTitle = document.getElementById('host-end-title');
+  const endEmoji = document.getElementById('host-end-emoji');
+  
+  if(finalTemp <= 28) {
+    endTitle.textContent = "서울이 시원해졌습니다!";
+    endEmoji.textContent = "🏆🍃";
+  } else {
+    endTitle.textContent = "조금 더 노력이 필요합니다!";
+    endEmoji.textContent = "☀️🥵";
+  }
+  document.getElementById('host-end-temp-sub').textContent = `최종 온도: ${finalTemp.toFixed(1)}℃ (총 탭 횟수: ${totalTaps}회)`;
+
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('host-final-lb').innerHTML = ranked.map((p,i) => `
+    <div class="lb-row ${i===0?'top1':i===1?'top2':i===2?'top3':''}">
+      <div class="lb-rank">${medals[i] || (i+1)}</div>
+      <div class="lb-name">${escapeHtml(p.name)}</div>
+      <div class="lb-score">${p.score} 탭</div>
+    </div>`).join('') || '<p class="sub">참가자가 없습니다.</p>';
+
+  show('screen-host-end');
+}
+
+/* ---------------- PLAYER: JOIN & WAIT ---------------- */
+async function playerJoin(){
+  const code = document.getElementById('join-code').value.trim();
+  const name = document.getElementById('join-name').value.trim();
+  const errEl = document.getElementById('join-err');
+  errEl.textContent = '';
+  
+  if(!/^\d{4}$/.test(code)){ errEl.textContent = '방 코드 4자리를 정확히 입력해주세요.'; return; }
+  if(!name){ errEl.textContent = '닉네임을 입력해주세요.'; return; }
+
+  const state = await readJSON(kState(code), null);
+  if(!state){ errEl.textContent = '해당 방을 찾을 수 없습니다.'; return; }
+
+  ROLE = 'player'; ROOM = code; PID = uid(); MY_NAME = name; localScore = 0;
+  
+  const players = await readJSON(kPlayers(ROOM), {});
+  if(Object.keys(players).length >= MAX_PLAYERS){ errEl.textContent = '방 정원(22명)이 가득 찼습니다.'; return; }
+  
+  players[PID] = { name, score: 0 };
+  await writeJSON(kPlayers(ROOM), players);
+
+  document.getElementById('pw-hello').textContent = `${name}님, 대기 중!`;
+  show('screen-p-waiting');
+  pollTimer = setInterval(playerPoll, 1000);
+}
+
+/* ---------------- PLAYER: PLAYING & POLL ---------------- */
+let lastSeenPhase = null;
+
+async function playerPoll(){
+  const state = await readJSON(kState(ROOM), null);
+  if(!state) return;
+
+  if(state.phase === 'play' && lastSeenPhase !== 'play'){
+    localScore = 0;
+    document.getElementById('player-score').textContent = '0';
+    show('screen-p-play');
+    gameTimer = setInterval(syncPlayerScore, 1000);
+  } else if(state.phase === 'end' && lastSeenPhase !== 'end'){
+    clearInterval(gameTimer);
+    await syncPlayerScore(); // 마지막 남은 탭수 전송
+    renderPlayerEnd();
+  }
+  lastSeenPhase = state.phase;
+}
+
+// 탭 처리
+function handleTap(){
+  localScore++;
+  document.getElementById('player-score').textContent = localScore;
+  
+  const btn = document.getElementById('louver-tap-btn');
+  btn.style.transform = 'scale(0.92)';
+  setTimeout(() => btn.style.transform = 'scale(1)', 50);
+}
+
+// 로컬 탭 점수를 서버에 전송
+async function syncPlayerScore(){
+  if(!ROOM || !PID) return;
+  const players = await readJSON(kPlayers(ROOM), {});
+  if(players[PID]){
+    players[PID].score = localScore;
+    await writeJSON(kPlayers(ROOM), players);
+  }
+}
+
+async function renderPlayerEnd(){
+  clearInterval(pollTimer);
+  const players = await readJSON(kPlayers(ROOM), {});
+  const ranked = Object.entries(players)
+    .map(([id, p]) => ({ id, ...p }))
+    .sort((a,b)=>b.score-a.score);
+  
+  const myRank = ranked.findIndex(p => p.id === PID);
+  const rankNum = myRank >= 0 ? myRank + 1 : ranked.length;
+  const emojis = ['🥇','🥈','🥉'];
+
+  document.getElementById('pe-emoji').textContent = emojis[rankNum-1] || '🏃';
+  document.getElementById('pe-rank').textContent = `${rankNum} 위`;
+  document.getElementById('pe-score').textContent = localScore;
+  show('screen-p-end');
+}
+</script>
+</body>
+</html>
