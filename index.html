@@ -346,7 +346,6 @@
 </head>
 <body>
 
-<!-- ============ ROLE SELECT ============ -->
 <div id="screen-role" class="screen">
   <div class="eyebrow">🔥 실시간 열섬 정화 탭 배틀</div>
   <h1 class="title">서울 식히기!<br>루버 제트 대작전</h1>
@@ -366,7 +365,6 @@
   <p class="footer-note">참가자는 최대 22명까지 동시 참여하여 1, 2, 3등 경쟁을 펼칩니다!</p>
 </div>
 
-<!-- ============ HOST: LOBBY ============ -->
 <div id="screen-host-lobby" class="screen hidden">
   <div class="eyebrow">진행자 화면 · 참가자에게 아래 정보를 보여주세요</div>
   <h1 class="title" style="font-size:30px;">모바일 기기 접속 방법</h1>
@@ -387,7 +385,6 @@
   </div>
 </div>
 
-<!-- ============ HOST: PLAYING ============ -->
 <div id="screen-host-play" class="screen hidden">
   <div class="play-stage">
     <div class="eyebrow">🌡️ 실시간 기온 상승 중! 빨리 식혀야 합니다!</div>
@@ -399,7 +396,6 @@
       <div class="temp-display" id="host-temp">39.5℃</div>
     </div>
 
-    <!-- 실시간 Top 3 포디움 -->
     <div class="eyebrow" style="color:var(--heat-3)">🏆 실시간 연타 TOP 3</div>
     <div class="rank-podium">
       <div class="podium-col second">
@@ -427,7 +423,6 @@
   </div>
 </div>
 
-<!-- ============ HOST: END ============ -->
 <div id="screen-host-end" class="screen hidden">
   <div class="podium-title" id="host-end-emoji">🏆</div>
   <h1 class="title" style="font-size:32px;" id="host-end-title">서울을 지켜냈습니다!</h1>
@@ -436,7 +431,6 @@
   <p class="footer-note">새 게임을 시작하려면 새로고침하세요.</p>
 </div>
 
-<!-- ============ PLAYER: JOIN ============ -->
 <div id="screen-join" class="screen hidden">
   <div class="eyebrow">📱 대작전 참여</div>
   <h1 class="title" style="font-size:30px;">방에 들어가기</h1>
@@ -457,14 +451,12 @@
   </div>
 </div>
 
-<!-- ============ PLAYER: WAITING ============ -->
 <div id="screen-p-waiting" class="screen hidden">
   <div style="font-size:56px; margin-bottom:14px;">🏙️💨</div>
   <h1 class="title" style="font-size:26px;" id="pw-hello">장전 완료!</h1>
   <p class="sub">진행자가 게임을 시작하면 폰 화면을 연타할 준비를 하세요!<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span></p>
 </div>
 
-<!-- ============ PLAYER: PLAYING ============ -->
 <div id="screen-p-play" class="screen hidden">
   <div class="tap-container">
     <div class="eyebrow">마구 두드려 루버 바람 발사!!</div>
@@ -478,7 +470,6 @@
   </div>
 </div>
 
-<!-- ============ PLAYER: END ============ -->
 <div id="screen-p-end" class="screen hidden">
   <div class="podium-title" id="pe-emoji">🎉</div>
   <h1 class="title" style="font-size:28px;" id="pe-title">게임 종료!</h1>
@@ -494,7 +485,7 @@
 
 <script>
 /* ============================================================
-   루버 히어로 — 실시간 탭 배틀 (열섬 현상 제어)
+   루버 히어로 — 실시간 탭 배틀 (열섬 현상 제어 - 깃허브 글로벌 실시간 서버 탑재 버전)
    ============================================================ */
 
 let ROLE = null;
@@ -508,7 +499,8 @@ let localScore = 0;
 const GAME_DURATION = 30; // 30초 경쟁
 const MAX_PLAYERS = 22;
 
-const _localMockStorage = {};
+// 무료 실시간 JSON 스토리지 허브 API 연결 (방 연동 문제 해결 핵심 엔진)
+const SYNC_SERVER = "https://kv.restfulapi.workers.dev/key";
 
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
@@ -517,27 +509,31 @@ function show(id){
 function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 function genRoomCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
 
-/* ---------------- storage helpers ---------------- */
+/* ---------------- 글로벌 동기화 스토리지 헬퍼 (PC 🖥️ - 스마트폰 📱 통신) ---------------- */
 async function sGet(key){
-  if (window.storage && typeof window.storage.get === 'function') {
-    try {
-      const r = await window.storage.get(key, { shared: true });
-      return r ? r.value : null;
-    } catch(e) {}
+  try {
+    const res = await fetch(`${SYNC_SERVER}/${key}`);
+    if (!res.ok) return null;
+    const text = await res.text();
+    return text || null;
+  } catch (e) {
+    return localStorage.getItem(key) || null;
   }
-  return localStorage.getItem(key) || _localMockStorage[key] || null;
 }
 
 async function sSet(key, value){
-  if (window.storage && typeof window.storage.set === 'function') {
-    try {
-      await window.storage.set(key, value, { shared: true });
-      return true;
-    } catch(e) {}
+  try {
+    await fetch(`${SYNC_SERVER}/${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: value
+    });
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    localStorage.setItem(key, value);
+    return true;
   }
-  localStorage.setItem(key, value);
-  _localMockStorage[key] = value;
-  return true;
 }
 
 function kState(room){ return `tap_${room}_state`; }
@@ -559,11 +555,7 @@ function goHostSetup(){
   ROOM = genRoomCode();
   document.getElementById('host-room-code').textContent = ROOM;
   
-  // 현재 접속중인 브라우저의 진짜 링크 자동 감지해서 화면에 텍스트로 표출
   let cleanUrl = window.location.href.split('?')[0].split('#')[0];
-  if(cleanUrl.includes('claude.usercontent.com')) {
-    cleanUrl = "우측 상단 '점 세개(⋮)' 클릭 -> '공유(Publish)' 완료 후 주소창 주소를 넣어주세요.";
-  }
   document.getElementById('host-url-address').textContent = cleanUrl;
 
   writeJSON(kState(ROOM), { phase:'lobby', endTs: 0 });
@@ -597,9 +589,8 @@ async function hostStartGame(){
   show('screen-host-play');
   
   totalTapsLast = 0;
-  pollTimer = setInterval(hostPlayPoll, 500); // 0.5초마다 빠르게 싱크로
+  pollTimer = setInterval(hostPlayPoll, 500);
   
-  // 기상 열섬 애니메이션 타이머
   gameTimer = setInterval(() => {
     const remain = Math.max(0, (endTs - Date.now()) / 1000);
     document.getElementById('host-timer').textContent = remain.toFixed(1);
@@ -614,7 +605,6 @@ async function hostPlayPoll(){
   const players = await readJSON(kPlayers(ROOM), {});
   const pList = Object.values(players).sort((a,b)=>b.score-a.score);
   
-  // 실시간 Top 3 포디움 업데이트
   document.getElementById('p1-name').textContent = pList[0] ? pList[0].name : '-';
   document.getElementById('p1-score').textContent = pList[0] ? pList[0].score : '0';
   document.getElementById('p2-name').textContent = pList[1] ? pList[1].name : '-';
@@ -622,10 +612,9 @@ async function hostPlayPoll(){
   document.getElementById('p3-name').textContent = pList[2] ? pList[2].name : '-';
   document.getElementById('p3-score').textContent = pList[2] ? pList[2].score : '0';
 
-  // 총 탭수 계산 후 온도 반영 (기본 온도 42도에서 탭이 많을수록 시원해짐)
   const totalTaps = Object.values(players).reduce((sum, p) => sum + (p.score || 0), 0);
   const baseTemp = 42.0;
-  const coolEffect = Math.min(18, totalTaps * 0.1); // 최대 18도까지 식힐 수 있음
+  const coolEffect = Math.min(18, totalTaps * 0.1);
   const currentTemp = baseTemp - coolEffect;
 
   const tempEl = document.getElementById('host-temp');
@@ -648,7 +637,6 @@ async function hostPlayPoll(){
     cityEffect.style.opacity = '0';
   }
 
-  // 탭 입력이 증가했으면 바람 입자 이펙트 추가
   if (totalTaps > totalTapsLast) {
     createWindParticles(totalTaps - totalTapsLast);
     totalTapsLast = totalTaps;
@@ -657,7 +645,7 @@ async function hostPlayPoll(){
 
 function createWindParticles(count) {
   const container = document.getElementById('city-box');
-  const spawnCount = Math.min(15, count); // 성능 최적화
+  const spawnCount = Math.min(15, count);
   for (let i = 0; i < spawnCount; i++) {
     const p = document.createElement('div');
     p.className = 'wind-particle';
@@ -706,7 +694,7 @@ async function playerJoin(){
   const code = document.getElementById('join-code').value.trim();
   const name = document.getElementById('join-name').value.trim();
   const errEl = document.getElementById('join-err');
-  errEl.textContent = '';
+  errEl.textContent = '방을 확인하는 중...';
   
   if(!/^\d{4}$/.test(code)){ errEl.textContent = '방 코드 4자리를 정확히 입력해주세요.'; return; }
   if(!name){ errEl.textContent = '닉네임을 입력해주세요.'; return; }
@@ -722,6 +710,7 @@ async function playerJoin(){
   players[PID] = { name, score: 0 };
   await writeJSON(kPlayers(ROOM), players);
 
+  errEl.textContent = '';
   document.getElementById('pw-hello').textContent = `${name}님, 대기 중!`;
   show('screen-p-waiting');
   pollTimer = setInterval(playerPoll, 1000);
@@ -741,13 +730,12 @@ async function playerPoll(){
     gameTimer = setInterval(syncPlayerScore, 1000);
   } else if(state.phase === 'end' && lastSeenPhase !== 'end'){
     clearInterval(gameTimer);
-    await syncPlayerScore(); // 마지막 남은 탭수 전송
+    await syncPlayerScore();
     renderPlayerEnd();
   }
   lastSeenPhase = state.phase;
 }
 
-// 탭 처리
 function handleTap(){
   localScore++;
   document.getElementById('player-score').textContent = localScore;
@@ -757,7 +745,6 @@ function handleTap(){
   setTimeout(() => btn.style.transform = 'scale(1)', 50);
 }
 
-// 로컬 탭 점수를 서버에 전송
 async function syncPlayerScore(){
   if(!ROOM || !PID) return;
   const players = await readJSON(kPlayers(ROOM), {});
