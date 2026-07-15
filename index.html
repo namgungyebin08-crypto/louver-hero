@@ -783,8 +783,10 @@
       });
     });
 
-    // 약속된 30초 카운트다운 레이스 시작!
+    // ★ 확실하게 고정된 30초 카운트다운 레이스 시작! ★
     let timeLeft = 30;
+    document.getElementById('game-timer').innerText = timeLeft; // 초기값 30 세팅
+
     const countdown = setInterval(() => {
       timeLeft--;
       document.getElementById('game-timer').innerText = timeLeft;
