@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght=500;600;700&family=Inter:wght=400;500;600;700;800&display=swap" rel="stylesheet">
 
+<!-- 파이어베이스 SDK (v10) 로드 -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
@@ -177,12 +178,12 @@
     padding:8px 14px; font-size:13.5px; font-weight:600; color:var(--text-hi);
     display:flex; align-items:center; gap:6px;
   }
-  .player-chip .dot{width:8px; height:8px; border-radius:50%; background:var(--ok);}
+  .player-chip .dot{width:8px; height:8px; border-radius:50%;}
   .count-pill{
     font-family:var(--font-display); font-size:15px; color:var(--text-lo); margin-bottom:6px; text-align:center;
   }
 
-  /* ---------- host play board (개인전 랭킹중계) ---------- */
+  /* ---------- host play board (개인 순위 리더보드) ---------- */
   .play-stage{
     width:100%;
     max-width:800px;
@@ -231,9 +232,9 @@
     font-family: var(--font-display);
     font-size: 24px;
     font-weight: 700;
-    width: 45px;
+    width: 55px;
     z-index: 2;
-    color: var(--heat-1);
+    color: var(--heat-3);
   }
   .leader-name {
     flex-grow: 1;
@@ -241,6 +242,9 @@
     font-weight: 600;
     z-index: 2;
     text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .leader-taps {
     font-family: var(--font-display);
@@ -265,9 +269,8 @@
   }
   .tap-area:active {
     transform: scale(0.96);
-    background: rgba(0, 217, 255, 0.15);
   }
-  .tap-text { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--heat-1); }
+  .tap-text { font-family: var(--font-display); font-size: 32px; font-weight: 700; }
   .player-status { text-align: center; font-size: 14px; color: var(--text-lo); }
 
   /* ---------- 최종 결과 시상대 ---------- */
@@ -304,13 +307,33 @@
   }
   .podium-medal { font-size: 32px; width: 50px; text-align: center; margin-right: 15px; }
   .podium-info { flex-grow: 1; text-align: left; }
-  .podium-info .p-name { font-size: 20px; color: var(--text-hi); }
+  .podium-info .p-name { font-size: 20px; color: var(--text-hi); display: flex; align-items: center; gap: 8px; }
   .podium-info .p-rank { font-size: 12px; color: var(--text-lo); }
   .podium-score { font-family: var(--font-display); font-size: 22px; color: var(--heat-1); }
+
+  /* 대기실 소속팀 안내판 카드 */
+  .team-announcement-card {
+    border-radius: 16px;
+    padding: 16px;
+    margin: 15px 0;
+    text-align: center;
+    border: 2px solid transparent;
+  }
+  .team-announcement-card.cool {
+    background: rgba(0, 217, 255, 0.08);
+    border-color: var(--heat-1);
+    color: var(--heat-1);
+  }
+  .team-announcement-card.hot {
+    background: rgba(255, 48, 64, 0.08);
+    border-color: var(--heat-6);
+    color: var(--heat-6);
+  }
 </style>
 </head>
 <body>
 
+  <!-- 화면 1: 역할 선택 -->
   <div id="screen-role" class="screen">
     <span class="eyebrow">Realtime Tap Battle</span>
     <h1 class="title">서울 식히기 : 개인전</h1>
@@ -329,6 +352,7 @@
     </div>
   </div>
 
+  <!-- 화면 2: 플레이어 닉네임 & 방 입장 -->
   <div id="screen-join" class="screen hidden">
     <div class="card">
       <div class="eyebrow" style="text-align: center;">Join Game</div>
@@ -343,6 +367,7 @@
     </div>
   </div>
 
+  <!-- 화면 3: 호스트 로비 (참여자 대기) -->
   <div id="screen-host-lobby" class="screen hidden">
     <span class="eyebrow">Game Lobby</span>
     <h1 id="lobby-title" style="margin: 0;">방을 생성하는 중...</h1>
@@ -359,39 +384,53 @@
     <button class="btn btn-hot" style="max-width: 300px; margin-top: 20px;" onclick="startGame()">게임 시작!</button>
   </div>
 
+  <!-- 화면 4: 호스트 게임판 (중계용 실시간 전체 리더보드) -->
   <div id="screen-host-play" class="screen hidden">
     <div class="play-stage">
       <div class="timer-banner" id="game-timer">10</div>
-      <h2 style="margin: 0 0 10px 0; font-weight: 500;">🏆 실시간 리더보드</h2>
-      <p style="color: var(--text-lo); margin-top:0; margin-bottom: 20px;">누가 더 많이 탭하고 있을까요? (상위 5명 중계)</p>
+      <h2 style="margin: 0 0 10px 0; font-weight: 500;">🏆 실시간 전체 순위</h2>
+      <p style="color: var(--text-lo); margin-top:0; margin-bottom: 20px;">누가 더 많이 탭하고 있을까요? (실시간 업데이트)</p>
 
+      <!-- 리더보드 판 -->
       <div class="leaderboard-container" id="realtime-leaderboard">
-        </div>
+        <!-- 동적으로 전체 참가자가 들어감 -->
+      </div>
     </div>
   </div>
 
+  <!-- 화면 5: 호스트 결과 화면 (대망의 1,2,3,4등!) -->
   <div id="screen-host-result" class="screen hidden">
     <div class="card" style="max-width: 500px; text-align: center;">
       <span class="eyebrow">Final Podium</span>
       <h1 style="font-size: 38px; margin: 10px 0; color: var(--heat-3);">🎉 축하합니다!</h1>
       <p style="color: var(--text-lo); margin-bottom: 20px;">내일의 탭 전사! 대망의 상위 4인 시상대입니다.</p>
       
+      <!-- 시상대 목록 -->
       <div class="podium-container" id="final-podium">
-        </div>
+        <!-- 1, 2, 3, 4등 입상자 렌더링 -->
+      </div>
 
       <button class="btn btn-ghost" style="margin-top: 15px;" onclick="location.reload()">처음으로 가기</button>
     </div>
   </div>
 
+  <!-- 화면 6: 플레이어 게임 대기실 -->
   <div id="screen-player-lobby" class="screen hidden">
     <div class="card" style="text-align: center;">
       <span class="eyebrow" id="p-team-badge" style="color: var(--heat-1);">READY</span>
       <h2 id="p-welcome">안녕하세요, 플레이어님!</h2>
-      <p style="color: var(--text-lo);">호스트가 게임을 시작하면 화면을 빠르게 두드릴 준비를 하세요!</p>
-      <div style="font-size: 80px; margin: 20px 0;">🎯</div>
+      
+      <!-- 대기실 팀 표시 영역 추가 -->
+      <div id="p-lobby-team-card" class="team-announcement-card">
+        소속팀을 결정하고 있습니다...
+      </div>
+
+      <p style="color: var(--text-lo); font-size: 14px;">호스트가 게임을 시작하면 화면을 빠르게 두드릴 준비를 하세요!</p>
+      <div style="font-size: 60px; margin: 10px 0;">🎯</div>
     </div>
   </div>
 
+  <!-- 화면 7: 플레이어 터치 패드 -->
   <div id="screen-player-play" class="screen hidden">
     <div class="player-status" id="p-status">상태 로딩 중...</div>
     <h2 id="p-score-display" style="text-align: center; font-size: 36px; margin: 15px 0;">나의 탭: 0</h2>
@@ -402,6 +441,7 @@
     </div>
   </div>
 
+  <!-- 화면 8: 플레이어 결과 대기 (본인 순위 확인 가능) -->
   <div id="screen-player-result" class="screen hidden">
     <div class="card" style="text-align: center;">
       <span class="eyebrow">GAME OVER</span>
@@ -429,6 +469,7 @@
   let currentRoomId = null;
   let myRole = null;
   let myName = "";
+  let myTeam = ""; // 'cool' or 'hot'
   let myTaps = 0;
   let isGameActive = false;
   let myPlayerKey = null; // 플레이어 고유 Firebase 키
@@ -487,7 +528,10 @@
         const p = players[key];
         const chip = document.createElement('div');
         chip.className = 'player-chip';
-        chip.innerHTML = `<span class="dot"></span>${p.name}`;
+        // 대기 화면 칩에 팀 색상 부여
+        const dotColor = p.team === 'cool' ? 'var(--heat-1)' : 'var(--heat-6)';
+        const teamIcon = p.team === 'cool' ? '❄️' : '🔥';
+        chip.innerHTML = `<span class="dot" style="background:${dotColor}"></span>${teamIcon} ${p.name}`;
         lobbyPlayers.appendChild(chip);
       });
     });
@@ -517,14 +561,27 @@
         return;
       }
 
+      // 개인전에서도 인원 균형을 맞춰 팀을 실시간 분배 (쿨팀/핫팀)
+      let coolCount = 0;
+      let hotCount = 0;
+      if (roomData.players) {
+        Object.values(roomData.players).forEach(p => {
+          if (p.team === 'cool') coolCount++;
+          else if (p.team === 'hot') hotCount++;
+        });
+      }
+      const assignedTeam = (coolCount <= hotCount) ? 'cool' : 'hot';
+
       currentRoomId = codeInput;
       myName = nameInput;
+      myTeam = assignedTeam;
 
       // 파이어베이스에 플레이어 추가
       const newPlayerRef = roomRef.child('players').push();
       myPlayerKey = newPlayerRef.key;
       newPlayerRef.set({
         name: myName,
+        team: myTeam,
         taps: 0
       });
 
@@ -534,6 +591,16 @@
       // 플레이어 대기실 준비
       showScreen('player-lobby');
       document.getElementById('p-welcome').innerText = `환영합니다, ${myName}님!`;
+      
+      // 대기 화면에 팀 소속 표시
+      const lobbyTeamCard = document.getElementById('p-lobby-team-card');
+      if (myTeam === 'cool') {
+        lobbyTeamCard.className = "team-announcement-card cool";
+        lobbyTeamCard.innerHTML = `<h3 style="margin:0;">❄️ 당신은 쿨팀 (Cool Team)</h3><p style="margin:5px 0 0 0; font-size:12px; opacity:0.8;">서울을 시원하게 식힐 냉기의 수호자!</p>`;
+      } else {
+        lobbyTeamCard.className = "team-announcement-card hot";
+        lobbyTeamCard.innerHTML = `<h3 style="margin:0;">🔥 당신은 핫팀 (Hot Team)</h3><p style="margin:5px 0 0 0; font-size:12px; opacity:0.8;">서울을 뜨겁게 덥힐 열기의 지배자!</p>`;
+      }
 
       // 게임 시작 리스너 달기
       roomRef.child('status').on('value', (statusSnap) => {
@@ -556,7 +623,7 @@
     showScreen('host-play');
     isGameActive = true;
 
-    // 게임판 실시간 상위 5명 리더보드 리스너
+    // 게임판 실시간 전체 리더보드 리스너
     roomRef.child('players').on('value', (snap) => {
       const players = snap.val() || {};
       
@@ -564,31 +631,37 @@
       const sortedList = Object.keys(players).map(key => ({
         id: key,
         name: players[key].name,
+        team: players[key].team || 'cool',
         taps: players[key].taps || 0
       })).sort((a, b) => b.taps - a.taps); // 내림차순 정렬
 
       const leaderboardEl = document.getElementById('realtime-leaderboard');
       leaderboardEl.innerHTML = '';
 
-      // 상위 5명만 실시간 표시
-      const top5 = sortedList.slice(0, 5);
-      const maxTaps = top5[0] ? Math.max(top5[0].taps, 1) : 1; // 게이지 계산용 기준값
+      const maxTaps = sortedList[0] ? Math.max(sortedList[0].taps, 1) : 1; // 게이지 계산용 기준값
 
-      top5.forEach((p, idx) => {
+      // 접속한 전체 플레이어 리스트업
+      sortedList.forEach((p, idx) => {
         const percentage = (p.taps / maxTaps) * 100;
+        const teamIcon = p.team === 'cool' ? '❄️' : '🔥';
+        const teamColor = p.team === 'cool' ? 'var(--heat-1)' : 'var(--heat-6)';
+        
         const row = document.createElement('div');
         row.className = 'leader-row';
         row.innerHTML = `
           <div class="leader-bg-bar" style="width: ${percentage}%"></div>
           <div class="leader-rank">${idx + 1}등</div>
-          <div class="leader-name">${p.name}</div>
+          <div class="leader-name">
+            <span style="color: ${teamColor}">${teamIcon}</span>
+            <span>${p.name}</span>
+          </div>
           <div class="leader-taps">${p.taps} 탭</div>
         `;
         leaderboardEl.appendChild(row);
       });
     });
 
-    // 10초 카운트다운 (20명이 모여 10초간 스파트를 뛰는 것이 가장 극적입니다!)
+    // 10초 카운트다운
     let timeLeft = 10;
     const countdown = setInterval(() => {
       timeLeft--;
@@ -619,9 +692,28 @@
     isGameActive = true;
     myTaps = 0;
 
-    document.getElementById('p-status').innerText = `🔥 스크린을 미친 듯이 탭하세요!`;
+    const pad = document.getElementById('tap-pad');
+    const emoji = document.getElementById('tap-emoji');
+    const text = document.getElementById('tap-instruction');
+    const status = document.getElementById('p-status');
 
-    // 호스트의 종료 상태 감지
+    if (myTeam === 'cool') {
+      pad.style.background = "rgba(0, 217, 255, 0.05)";
+      pad.addEventListener('click', () => { pad.style.background = "rgba(0, 217, 255, 0.2)"; setTimeout(()=> { pad.style.background = "rgba(0, 217, 255, 0.05)" }, 50); });
+      emoji.innerText = "❄️";
+      text.innerText = "식히려면 탭하세요!";
+      text.style.color = "var(--heat-1)";
+      status.innerText = "❄️ 쿨팀 ❄️";
+    } else {
+      pad.style.background = "rgba(255, 48, 64, 0.05)";
+      pad.addEventListener('click', () => { pad.style.background = "rgba(255, 48, 64, 0.2)"; setTimeout(()=> { pad.style.background = "rgba(255, 48, 64, 0.05)" }, 50); });
+      emoji.innerText = "🔥";
+      text.innerText = "불태우려면 탭하세요!";
+      text.style.color = "var(--heat-6)";
+      status.innerText = "🔥 핫팀 🔥";
+    }
+
+    // 호스트의 종료 상태 감시
     db.ref('rooms/' + currentRoomId + '/status').on('value', (statusSnap) => {
       if (statusSnap.val() === 'ended') {
         isGameActive = false;
@@ -658,6 +750,7 @@
       const players = snap.val() || {};
       const sorted = Object.keys(players).map(key => ({
         name: players[key].name,
+        team: players[key].team || 'cool',
         taps: players[key].taps || 0
       })).sort((a, b) => b.taps - a.taps);
 
@@ -679,11 +772,16 @@
         const rankInfo = ranks[i];
         
         if (sorted[i]) {
+          const teamIcon = sorted[i].team === 'cool' ? '❄️' : '🔥';
+          const teamColor = sorted[i].team === 'cool' ? 'var(--heat-1)' : 'var(--heat-6)';
           card.className = `podium-card ${rankInfo.class}`;
           card.innerHTML = `
             <div class="podium-medal">${rankInfo.medal}</div>
             <div class="podium-info">
-              <div class="p-name">${sorted[i].name}</div>
+              <div class="p-name">
+                <span style="color: ${teamColor}; margin-right:4px;">${teamIcon}</span>
+                <span>${sorted[i].name}</span>
+              </div>
               <div class="p-rank">${rankInfo.title}</div>
             </div>
             <div class="podium-score">${sorted[i].taps} 탭</div>
