@@ -182,7 +182,7 @@
     font-family:var(--font-display); font-size:15px; color:var(--text-lo); margin-bottom:6px; text-align:center;
   }
 
-  /* ---------- host play board ---------- */
+  /* ---------- host play board (개인전 랭킹중계) ---------- */
   .play-stage{
     width:100%;
     max-width:800px;
@@ -194,67 +194,60 @@
     font-family:var(--font-display);
     font-size:56px;
     font-weight:800;
-    color:var(--heat-1);
-    text-shadow:0 0 20px rgba(0,217,255,0.4);
+    color:var(--heat-3);
+    text-shadow:0 0 20px rgba(255,214,10,0.4);
     margin-bottom:12px;
   }
-  .temp-display{
-    font-family:var(--font-display);
-    font-size:42px;
-    font-weight:700;
-    margin-bottom:20px;
-    transition:color 0.3s;
-  }
-  /* 도시 온도 게이지 */
-  .city-container{
+  
+  /* 리더보드 보드 */
+  .leaderboard-container{
     width:100%;
-    background:rgba(255,255,255,0.03);
+    background:var(--bg-panel);
     border:2px solid var(--line);
     border-radius:24px;
     padding:24px;
-    position:relative;
-    overflow:hidden;
     margin-bottom:28px;
-    text-align:center;
   }
-  .city-bg-effect{
-    position:absolute; inset:0;
-    background:linear-gradient(0deg, rgba(255,48,64,0.1) 0%, transparent 80%);
-    transition:opacity 0.5s;
-    z-index:1;
-  }
-  .city-emoji{
-    font-size:64px;
-    position:relative;
-    z-index:2;
-    margin-bottom:10px;
-  }
-  .progress-track {
-    background: var(--bg-void);
-    border-radius: 999px;
-    height: 30px;
-    width: 100%;
-    position: relative;
-    z-index: 2;
-    overflow: hidden;
-    border: 1px solid var(--line);
-  }
-  .progress-fill {
-    height: 100%;
-    width: 50%; /* 50% 시작 */
-    background: linear-gradient(90deg, var(--heat-1), var(--heat-5), var(--heat-6));
-    transition: width 0.15s ease-out;
-  }
-  .tap-stats {
+  .leader-row {
     display: flex;
-    justify-content: space-around;
-    width: 100%;
-    margin-top: 15px;
-    z-index: 2;
+    align-items: center;
+    margin-bottom: 14px;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 18px;
     position: relative;
+    overflow: hidden;
   }
-  .stat-col { text-align: center; }
-  .stat-val { font-family: var(--font-display); font-size: 28px; font-weight: 700; }
+  .leader-bg-bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, rgba(0, 217, 255, 0.15), rgba(255, 123, 0, 0.15));
+    width: 0%;
+    transition: width 0.15s ease-out;
+    z-index: 1;
+  }
+  .leader-rank {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    width: 45px;
+    z-index: 2;
+    color: var(--heat-1);
+  }
+  .leader-name {
+    flex-grow: 1;
+    font-size: 18px;
+    font-weight: 600;
+    z-index: 2;
+    text-align: left;
+  }
+  .leader-taps {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    z-index: 2;
+  }
 
   /* ---------- player controller ---------- */
   .tap-area {
@@ -263,40 +256,75 @@
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 300px;
+    height: 320px;
     border-radius: 24px;
     border: 2px dashed var(--line);
     cursor: pointer;
     transition: background 0.05s, transform 0.05s;
+    background: rgba(0, 217, 255, 0.05);
   }
   .tap-area:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
+    background: rgba(0, 217, 255, 0.15);
   }
-  .tap-area.cool-team { background: rgba(0, 217, 255, 0.05); }
-  .tap-area.cool-team:active { background: rgba(0, 217, 255, 0.15); }
-  .tap-area.hot-team { background: rgba(255, 48, 64, 0.05); }
-  .tap-area.hot-team:active { background: rgba(255, 48, 64, 0.15); }
-
-  .tap-text { font-family: var(--font-display); font-size: 32px; font-weight: 700; }
+  .tap-text { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--heat-1); }
   .player-status { text-align: center; font-size: 14px; color: var(--text-lo); }
+
+  /* ---------- 최종 결과 시상대 ---------- */
+  .podium-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin: 20px 0;
+  }
+  .podium-card {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border-radius: 16px;
+    border: 1.5px solid var(--line);
+    font-weight: 700;
+  }
+  .podium-card.gold {
+    background: linear-gradient(135deg, rgba(255, 214, 10, 0.15), rgba(255, 214, 10, 0.02));
+    border-color: var(--heat-3);
+  }
+  .podium-card.silver {
+    background: linear-gradient(135deg, rgba(243, 246, 255, 0.15), rgba(243, 246, 255, 0.02));
+    border-color: #d1dbed;
+  }
+  .podium-card.bronze {
+    background: linear-gradient(135deg, rgba(255, 123, 0, 0.15), rgba(255, 123, 0, 0.02));
+    border-color: var(--heat-5);
+  }
+  .podium-card.fourth {
+    background: var(--bg-panel-2);
+    border-color: var(--line);
+  }
+  .podium-medal { font-size: 32px; width: 50px; text-align: center; margin-right: 15px; }
+  .podium-info { flex-grow: 1; text-align: left; }
+  .podium-info .p-name { font-size: 20px; color: var(--text-hi); }
+  .podium-info .p-rank { font-size: 12px; color: var(--text-lo); }
+  .podium-score { font-family: var(--font-display); font-size: 22px; color: var(--heat-1); }
 </style>
 </head>
 <body>
 
   <div id="screen-role" class="screen">
     <span class="eyebrow">Realtime Tap Battle</span>
-    <h1 class="title">서울 식히기</h1>
-    <p class="sub">열섬 현상의 뜨거운 서울을 지키는 쿨팀 vs 더 덥게 만드려는 핫팀의 치열한 화면 탭 대결!</p>
+    <h1 class="title">서울 식히기 : 개인전</h1>
+    <p class="sub">10초간 스크린을 미친 듯이 탭하세요! 가장 많이 두드린 1,2,3,4등에게 푸짐한 상품을 드립니다!</p>
     <div class="role-grid">
       <div class="role-card host" onclick="selectRole('host')">
         <span class="emoji">🖥️</span>
         <h3>호스트로 참여 (화면 공유용)</h3>
-        <p>프로젝터나 화면 공유를 통해 모두에게 게임 현황판을 띄워줍니다.</p>
+        <p>프로젝터나 화면 공유를 통해 모두에게 실시간 랭킹 현황판을 띄워줍니다.</p>
       </div>
       <div class="role-card player" onclick="selectRole('player')">
         <span class="emoji">📱</span>
         <h3>플레이어로 참여 (스마트폰용)</h3>
-        <p>각자의 스마트폰으로 팀을 배정받아 미친 듯이 화면을 클릭합니다.</p>
+        <p>각자의 스마트폰으로 닉네임을 만들고 순위 경쟁에 뛰어듭니다.</p>
       </div>
     </div>
   </div>
@@ -304,7 +332,7 @@
   <div id="screen-join" class="screen hidden">
     <div class="card">
       <div class="eyebrow" style="text-align: center;">Join Game</div>
-      <h2 style="text-align: center; margin-top: 0;">팀원 입장하기</h2>
+      <h2 style="text-align: center; margin-top: 0;">닉네임 입력</h2>
       <div class="stack">
         <input type="text" id="join-code" placeholder="방 코드 4자리" maxlength="4" style="text-transform: uppercase;">
         <input type="text" id="join-name" placeholder="닉네임 입력" maxlength="8">
@@ -321,7 +349,7 @@
     <div class="room-code" id="lobby-code">----</div>
     
     <div class="info-box">
-      📢 학생들은 모바일로 아래 주소에 접속해 방 코드를 입력하세요!
+      📢 모바일로 아래 주소에 접속해 위 방 코드를 입력하세요!
       <span id="lobby-url">접속 중...</span>
     </div>
 
@@ -333,72 +361,61 @@
 
   <div id="screen-host-play" class="screen hidden">
     <div class="play-stage">
-      <div class="timer-banner" id="game-timer">30</div>
-      <div class="temp-display" id="city-temp">현재 온도: 30.0°C</div>
+      <div class="timer-banner" id="game-timer">10</div>
+      <h2 style="margin: 0 0 10px 0; font-weight: 500;">🏆 실시간 리더보드</h2>
+      <p style="color: var(--text-lo); margin-top:0; margin-bottom: 20px;">누가 더 많이 탭하고 있을까요? (상위 5명 중계)</p>
 
-      <div class="city-container">
-        <div class="city-bg-effect" id="bg-effect"></div>
-        <div class="city-emoji" id="city-emoji">🏙️</div>
-        
-        <div class="progress-track">
-          <div class="progress-fill" id="temp-progress"></div>
+      <div class="leaderboard-container" id="realtime-leaderboard">
         </div>
-
-        <div class="tap-stats">
-          <div class="stat-col" style="color: var(--heat-1)">
-            <div>쿨팀 (식히기)</div>
-            <div class="stat-val" id="cool-taps">0</div>
-          </div>
-          <div class="stat-col" style="color: var(--heat-6)">
-            <div>핫팀 (덥히기)</div>
-            <div class="stat-val" id="hot-taps">0</div>
-          </div>
-        </div>
-      </div>
-      <p style="color: var(--text-lo);">플레이어들은 지금 화면을 미친 듯이 탭하고 있습니다!</p>
     </div>
   </div>
 
   <div id="screen-host-result" class="screen hidden">
-    <div class="card" style="text-align: center;">
-      <span class="eyebrow">Battle Result</span>
-      <h1 id="winner-title" style="font-size: 50px; margin: 15px 0;">팀 승리!</h1>
-      <p id="winner-sub" style="color: var(--text-lo); line-height: 1.6;"></p>
-      <button class="btn btn-ghost" onclick="location.reload()">처음으로 가기</button>
+    <div class="card" style="max-width: 500px; text-align: center;">
+      <span class="eyebrow">Final Podium</span>
+      <h1 style="font-size: 38px; margin: 10px 0; color: var(--heat-3);">🎉 축하합니다!</h1>
+      <p style="color: var(--text-lo); margin-bottom: 20px;">내일의 탭 전사! 대망의 상위 4인 시상대입니다.</p>
+      
+      <div class="podium-container" id="final-podium">
+        </div>
+
+      <button class="btn btn-ghost" style="margin-top: 15px;" onclick="location.reload()">처음으로 가기</button>
     </div>
   </div>
 
   <div id="screen-player-lobby" class="screen hidden">
     <div class="card" style="text-align: center;">
-      <span class="eyebrow" id="p-team-badge">대기 중</span>
+      <span class="eyebrow" id="p-team-badge" style="color: var(--heat-1);">READY</span>
       <h2 id="p-welcome">안녕하세요, 플레이어님!</h2>
-      <p style="color: var(--text-lo);">호스트가 게임을 시작할 때까지 대기해주세요.</p>
-      <div style="font-size: 80px; margin: 20px 0;">⏳</div>
+      <p style="color: var(--text-lo);">호스트가 게임을 시작하면 화면을 빠르게 두드릴 준비를 하세요!</p>
+      <div style="font-size: 80px; margin: 20px 0;">🎯</div>
     </div>
   </div>
 
   <div id="screen-player-play" class="screen hidden">
     <div class="player-status" id="p-status">상태 로딩 중...</div>
-    <h2 id="p-score-display" style="text-align: center; font-size: 28px; margin: 10px 0;">나의 탭: 0</h2>
+    <h2 id="p-score-display" style="text-align: center; font-size: 36px; margin: 15px 0;">나의 탭: 0</h2>
     
     <div id="tap-pad" class="tap-area" onclick="handleTap()">
-      <div id="tap-emoji" style="font-size: 72px;">🧊</div>
-      <div class="tap-text" id="tap-instruction">탭해서 식히세요!</div>
+      <div id="tap-emoji" style="font-size: 84px; margin-bottom:10px;">⚡</div>
+      <div class="tap-text" id="tap-instruction">여기를 무한 탭!!!</div>
     </div>
   </div>
 
   <div id="screen-player-result" class="screen hidden">
     <div class="card" style="text-align: center;">
       <span class="eyebrow">GAME OVER</span>
-      <h2>게임이 끝났습니다!</h2>
-      <p style="color: var(--text-lo);">호스트 스크린을 통해 최종 승리팀을 확인하세요!</p>
-      <button class="btn btn-ghost" onclick="location.reload()">다시 시작하기</button>
+      <h2>나의 최종 기록</h2>
+      <h1 id="p-final-score" style="font-size: 42px; margin: 10px 0; color: var(--heat-3);">0 탭</h1>
+      <p id="p-final-rank" style="font-size: 20px; font-weight:700; color: var(--heat-1); margin-top: 5px;">순위 집계 중...</p>
+      <p style="color: var(--text-lo); font-size: 14px; margin-top: 15px;">전체 순위는 호스트 스크린을 통해 확인하세요!</p>
+      <button class="btn btn-ghost" style="margin-top:20px;" onclick="location.reload()">다시 시작하기</button>
     </div>
   </div>
 
 <script>
   // ==========================================
-  // [필독] 파이어베이스 설정
+  // 파이어베이스 설정
   // ==========================================
   const firebaseConfig = {
     databaseURL: "https://louver-game-default-rtdb.asia-southeast1.firebasedatabase.app/"
@@ -411,10 +428,10 @@
   // 글로벌 상태값들
   let currentRoomId = null;
   let myRole = null;
-  let myTeam = null; // 'cool' or 'hot'
   let myName = "";
   let myTaps = 0;
   let isGameActive = false;
+  let myPlayerKey = null; // 플레이어 고유 Firebase 키
 
   // 화면 전환 헬퍼
   function showScreen(screenId) {
@@ -447,17 +464,14 @@
     currentRoomId = roomId;
 
     showScreen('host-lobby');
-    document.getElementById('lobby-title').innerText = "서울을 구하라!";
+    document.getElementById('lobby-title').innerText = "탭 마스터 선발전";
     document.getElementById('lobby-code').innerText = roomId;
     document.getElementById('lobby-url').innerText = window.location.origin + window.location.pathname;
 
     // 파이어베이스 방 초기화 데이터 생성
     const roomRef = db.ref('rooms/' + roomId);
     roomRef.set({
-      status: 'waiting',
-      coolTaps: 0,
-      hotTaps: 0,
-      temp: 30.0 // 30도에서 시작
+      status: 'waiting'
     });
 
     // 플레이어 접속 실시간 리스너
@@ -473,9 +487,7 @@
         const p = players[key];
         const chip = document.createElement('div');
         chip.className = 'player-chip';
-        // 팀 색상에 따라 다르게 표시
-        const dotColor = p.team === 'cool' ? 'var(--heat-1)' : 'var(--heat-6)';
-        chip.innerHTML = `<span class="dot" style="background:${dotColor}"></span>${p.name}`;
+        chip.innerHTML = `<span class="dot"></span>${p.name}`;
         lobbyPlayers.appendChild(chip);
       });
     });
@@ -505,38 +517,22 @@
         return;
       }
 
-      // 인원 균형을 맞춰 팀 자동 결정 (쿨팀/핫팀)
-      let coolCount = 0;
-      let hotCount = 0;
-      if (roomData.players) {
-        Object.values(roomData.players).forEach(p => {
-          if (p.team === 'cool') coolCount++;
-          else if (p.team === 'hot') hotCount++;
-        });
-      }
-      const assignedTeam = (coolCount <= hotCount) ? 'cool' : 'hot';
-
       currentRoomId = codeInput;
       myName = nameInput;
-      myTeam = assignedTeam;
 
       // 파이어베이스에 플레이어 추가
       const newPlayerRef = roomRef.child('players').push();
+      myPlayerKey = newPlayerRef.key;
       newPlayerRef.set({
         name: myName,
-        team: myTeam,
         taps: 0
       });
 
-      // 브라우저가 꺼지면 방에서 플레이어 삭제 처리
+      // 브라우저가 꺼지면 방에서 플레이어 자동 삭제 처리
       newPlayerRef.onDisconnect().remove();
 
       // 플레이어 대기실 준비
       showScreen('player-lobby');
-      const teamText = (myTeam === 'cool') ? "❄️ 쿨팀 (서울을 시원하게!)" : "🔥 핫팀 (서울을 뜨겁게!)";
-      const teamBadge = document.getElementById('p-team-badge');
-      teamBadge.innerText = teamText;
-      teamBadge.style.color = (myTeam === 'cool') ? 'var(--heat-1)' : 'var(--heat-6)';
       document.getElementById('p-welcome').innerText = `환영합니다, ${myName}님!`;
 
       // 게임 시작 리스너 달기
@@ -554,60 +550,46 @@
     
     // 게임 진행 모드로 상태 변경
     roomRef.update({
-      status: 'playing',
-      coolTaps: 0,
-      hotTaps: 0,
-      temp: 30.0
+      status: 'playing'
     });
 
     showScreen('host-play');
     isGameActive = true;
 
-    // 게임 판 실시간 집계 리스너
-    roomRef.on('value', (snap) => {
-      const data = snap.val();
-      if (!data) return;
-
-      const cTaps = data.coolTaps || 0;
-      const hTaps = data.hotTaps || 0;
+    // 게임판 실시간 상위 5명 리더보드 리스너
+    roomRef.child('players').on('value', (snap) => {
+      const players = snap.val() || {};
       
-      // 누적 수치 렌더링
-      document.getElementById('cool-taps').innerText = cTaps;
-      document.getElementById('hot-taps').innerText = hTaps;
+      // 오브젝트 배열화 및 정렬
+      const sortedList = Object.keys(players).map(key => ({
+        id: key,
+        name: players[key].name,
+        taps: players[key].taps || 0
+      })).sort((a, b) => b.taps - a.taps); // 내림차순 정렬
 
-      // 온도 계산 (기본 30도에서 쿨 탭당 -0.1도, 핫 탭당 +0.1도)
-      const calculatedTemp = Math.round((30.0 - (cTaps * 0.1) + (hTaps * 0.1)) * 10) / 10;
-      
-      const tempDisplay = document.getElementById('city-temp');
-      tempDisplay.innerText = `현재 온도: ${calculatedTemp.toFixed(1)}°C`;
+      const leaderboardEl = document.getElementById('realtime-leaderboard');
+      leaderboardEl.innerHTML = '';
 
-      // 게이지 폭 조정 (최소 0%, 최대 100%, 30도를 중심으로 가변폭)
-      // 0도 ~ 60도 범위로 게이지화
-      let percentage = ((calculatedTemp) / 60) * 100;
-      if (percentage < 0) percentage = 0;
-      if (percentage > 100) percentage = 100;
-      document.getElementById('temp-progress').style.width = percentage + '%';
+      // 상위 5명만 실시간 표시
+      const top5 = sortedList.slice(0, 5);
+      const maxTaps = top5[0] ? Math.max(top5[0].taps, 1) : 1; // 게이지 계산용 기준값
 
-      // 온도에 따른 도시 환경 비주얼 변화
-      const emojiEl = document.getElementById('city-emoji');
-      const bgEffect = document.getElementById('bg-effect');
-      if (calculatedTemp <= 15) {
-        emojiEl.innerText = "❄️🏙️☃️";
-        tempDisplay.style.color = 'var(--heat-1)';
-        bgEffect.style.background = 'linear-gradient(0deg, rgba(0,217,255,0.2) 0%, transparent 80%)';
-      } else if (calculatedTemp > 15 && calculatedTemp <= 35) {
-        emojiEl.innerText = "🏙️🍃🚗";
-        tempDisplay.style.color = 'var(--heat-3)';
-        bgEffect.style.background = 'linear-gradient(0deg, rgba(255,214,10,0.1) 0%, transparent 80%)';
-      } else {
-        emojiEl.innerText = "🥵🏙️🔥";
-        tempDisplay.style.color = 'var(--heat-6)';
-        bgEffect.style.background = 'linear-gradient(0deg, rgba(255,48,64,0.3) 0%, transparent 80%)';
-      }
+      top5.forEach((p, idx) => {
+        const percentage = (p.taps / maxTaps) * 100;
+        const row = document.createElement('div');
+        row.className = 'leader-row';
+        row.innerHTML = `
+          <div class="leader-bg-bar" style="width: ${percentage}%"></div>
+          <div class="leader-rank">${idx + 1}등</div>
+          <div class="leader-name">${p.name}</div>
+          <div class="leader-taps">${p.taps} 탭</div>
+        `;
+        leaderboardEl.appendChild(row);
+      });
     });
 
-    // 30초 카운트다운 진행
-    let timeLeft = 30;
+    // 10초 카운트다운 (20명이 모여 10초간 스파트를 뛰는 것이 가장 극적입니다!)
+    let timeLeft = 10;
     const countdown = setInterval(() => {
       timeLeft--;
       document.getElementById('game-timer').innerText = timeLeft;
@@ -619,86 +601,106 @@
     }, 1000);
   }
 
-  // 플레이어: 모바일에서 탭 실행 시
+  // 플레이어: 모바일 터치 패드 탭!
   function handleTap() {
     if (!isGameActive) return;
 
     myTaps++;
     document.getElementById('p-score-display').innerText = `나의 탭: ${myTaps}`;
 
-    const roomRef = db.ref('rooms/' + currentRoomId);
-    
-    // 트랜잭션을 사용하여 동시 다발적인 터치를 완벽하게 카운트
-    if (myTeam === 'cool') {
-      roomRef.child('coolTaps').transaction(current => (current || 0) + 1);
-    } else {
-      roomRef.child('hotTaps').transaction(current => (current || 0) + 1);
-    }
+    // 본인 레코드 트랜잭션 업데이트
+    const myRef = db.ref(`rooms/${currentRoomId}/players/${myPlayerKey}/taps`);
+    myRef.transaction(current => (current || 0) + 1);
   }
 
-  // 플레이어: 게임 시작 뷰 변경
+  // 플레이어: 게임 화면 전환 및 초기화
   function startPlayerGame() {
     showScreen('player-play');
     isGameActive = true;
     myTaps = 0;
 
-    const pad = document.getElementById('tap-pad');
-    const emoji = document.getElementById('tap-emoji');
-    const text = document.getElementById('tap-instruction');
-    const status = document.getElementById('p-status');
+    document.getElementById('p-status').innerText = `🔥 스크린을 미친 듯이 탭하세요!`;
 
-    if (myTeam === 'cool') {
-      pad.className = "tap-area cool-team";
-      emoji.innerText = "❄️";
-      text.innerText = "터치해서 서울을 식히세요!";
-      status.innerText = "나는 [쿨팀] ❄️";
-    } else {
-      pad.className = "tap-area hot-team";
-      emoji.innerText = "🔥";
-      text.innerText = "터치해서 불을 지피세요!";
-      status.innerText = "나는 [핫팀] 🔥";
-    }
-
-    // 호스트 상태 감시해 끝나면 자동 결과 화면
+    // 호스트의 종료 상태 감지
     db.ref('rooms/' + currentRoomId + '/status').on('value', (statusSnap) => {
       if (statusSnap.val() === 'ended') {
         isGameActive = false;
         showScreen('player-result');
+        document.getElementById('p-final-score').innerText = `${myTaps} 탭`;
+        
+        // 최종 플레이어 전체 순위 구하기
+        db.ref(`rooms/${currentRoomId}/players`).once('value', (playersSnap) => {
+          const players = playersSnap.val() || {};
+          const sorted = Object.keys(players).map(key => ({
+            id: key,
+            taps: players[key].taps || 0
+          })).sort((a, b) => b.taps - a.taps);
+
+          const myRankIdx = sorted.findIndex(p => p.id === myPlayerKey);
+          if (myRankIdx !== -1) {
+            document.getElementById('p-final-rank').innerText = `최종 등수: ${myRankIdx + 1}등!`;
+          }
+        });
       }
     });
   }
 
-  // 호스트: 게임 종료 처리
+  // 호스트: 게임 종료 및 1, 2, 3, 4등 최종 시상
   function endGame() {
     isGameActive = false;
     const roomRef = db.ref('rooms/' + currentRoomId);
 
+    // 상태 변경
     roomRef.update({ status: 'ended' });
 
-    roomRef.once('value').then((snap) => {
-      const data = snap.val();
-      const cTaps = data.coolTaps || 0;
-      const hTaps = data.hotTaps || 0;
-      const finalTemp = Math.round((30.0 - (cTaps * 0.1) + (hTaps * 0.1)) * 10) / 10;
+    // 최종 데이터 순위 정렬 및 시상대 렌더링
+    roomRef.child('players').once('value').then((snap) => {
+      const players = snap.val() || {};
+      const sorted = Object.keys(players).map(key => ({
+        name: players[key].name,
+        taps: players[key].taps || 0
+      })).sort((a, b) => b.taps - a.taps);
 
       showScreen('host-result');
 
-      const titleEl = document.getElementById('winner-title');
-      const subEl = document.getElementById('winner-sub');
+      const podiumEl = document.getElementById('final-podium');
+      podiumEl.innerHTML = '';
 
-      // 30도 기준으로 승패 결정
-      if (finalTemp < 30.0) {
-        titleEl.innerText = "❄️ 쿨팀 승리!";
-        titleEl.style.color = "var(--heat-1)";
-        subEl.innerHTML = `최종 온도: <strong>${finalTemp}°C</strong><br>쿨팀원들의 열띤 연타로 서울을 무사히 식혔습니다!`;
-      } else if (finalTemp > 30.0) {
-        titleEl.innerText = "🔥 핫팀 승리!";
-        titleEl.style.color = "var(--heat-6)";
-        subEl.innerHTML = `최종 온도: <strong>${finalTemp}°C</strong><br>핫팀의 강력한 화력으로 서울이 펄펄 끓고 있습니다!`;
-      } else {
-        titleEl.innerText = "⚖️ 무승부!";
-        titleEl.style.color = "var(--heat-3)";
-        subEl.innerHTML = `최종 온도: <strong>30.0°C</strong><br>두 팀이 팽팽하게 맞서 완벽한 평형을 이뤘습니다!`;
+      // 1등부터 4등까지 세팅
+      const ranks = [
+        { class: 'gold', medal: '🥇 1등', title: '금메달 (챔피언)' },
+        { class: 'silver', medal: '🥈 2등', title: '은메달' },
+        { class: 'bronze', medal: '🥉 3등', title: '동메달' },
+        { class: 'fourth', medal: '🏅 4등', title: '러너업' }
+      ];
+
+      for (let i = 0; i < 4; i++) {
+        const card = document.createElement('div');
+        const rankInfo = ranks[i];
+        
+        if (sorted[i]) {
+          card.className = `podium-card ${rankInfo.class}`;
+          card.innerHTML = `
+            <div class="podium-medal">${rankInfo.medal}</div>
+            <div class="podium-info">
+              <div class="p-name">${sorted[i].name}</div>
+              <div class="p-rank">${rankInfo.title}</div>
+            </div>
+            <div class="podium-score">${sorted[i].taps} 탭</div>
+          `;
+        } else {
+          // 참가자 수가 부족해 순위가 비었을 때 예외 처리
+          card.className = `podium-card fourth`;
+          card.innerHTML = `
+            <div class="podium-medal">${rankInfo.medal}</div>
+            <div class="podium-info">
+              <div class="p-name">참가자 없음</div>
+              <div class="p-rank">${rankInfo.title}</div>
+            </div>
+            <div class="podium-score">-</div>
+          `;
+        }
+        podiumEl.appendChild(card);
       }
     });
   }
